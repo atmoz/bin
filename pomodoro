@@ -1,0 +1,28 @@
+#!/bin/bash
+
+pomodoroLength=25
+#pauseLength=35
+COUNTER=$pomodoroLength
+
+function showCounter {
+    echo -ne "\r$COUNTER minutes left and counting ... "
+}
+
+function startPomodoro {
+    echo "Pomodoro started!"
+
+    while sleep 60; do
+        if (( $COUNTER <= 0 )); then
+            echo -ne "\rPomodoro is over, locking screen. \a"
+            xscreensaver-command --lock
+            break
+        else
+            showCounter
+            let COUNTER--
+        fi
+    done
+}
+
+startPomodoro
+showCounter
+

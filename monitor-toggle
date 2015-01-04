@@ -1,0 +1,65 @@
+#!/bin/bash
+
+defaultProfile="one"
+internalMonitor="LVDS-0"
+externalMonitor="DVI-I-2"
+
+function monitorIsEnabled() {
+    if [[ -n "$(xrandr | grep "$1" | grep "+")" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function monitorIsConnected() {
+    if [[ -n "$(xrandr | grep "$1" | grep " connected")" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+profile=${1:-$defaultProfile}
+
+if [ -n "$2" ]; then
+    toggle="$2"
+elif monitorIsConnected "$externalMonitor"; then
+    if monitorIsEnabled "$internalMonitor"; then
+        toggle="on"
+    else
+        toggle="off"
+    fi
+else
+    toggle="off"
+fi
+
+# left-of, right-of, above, below, same-as
+position="${3:-"above"}"
+
+case "$profile" in
+    "one")
+        if [ "$toggle" == "on" ]; then
+            xrandr --output $internalMonitor --off \
+                --output $externalMonitor --auto #--scale 0.8x0.8
+        else
+            xrandr --output $externalMonitor --off \
+                --output $internalMonitor --auto
+        fi
+        ;;
+
+    "two")
+        if [ "$toggle" == "on" ]; then
+            xrandr --output "$internalMonitor" --off \
+                --output "$externalMonitor" --auto
+
+            xrandr --output "$internalMonitor" --auto \
+                --output "$externalMonitor" --$position "$internalMonitor"
+        else
+            xrandr --output "$externalMonitor" --off
+        fi
+        ;;
+esac
+
+i3-msg restart
+nitrogen --restore

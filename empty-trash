@@ -1,0 +1,2 @@
+rm -Rf .local/share/Trash/files/*
+rm -Rf .local/share/Trash/info/*

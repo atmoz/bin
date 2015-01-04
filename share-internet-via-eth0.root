@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Set static IP for eth0
+# Remember to set 123.0.0.2 on the other PC, with 123.0.0.1 as gateway. 
+# Use google DNS 8.8.8.8
+ifconfig eth0 123.0.0.1 netmask 255.255.255.0 up
+
+# enable ip4 forwarding
+sysctl net.ipv4.ip_forward=1
+
+# Use NAT to forward traffic
+iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
+iptables --append FORWARD --in-interface eth0 -j ACCEPT
+iptables-save > /etc/iptables/iptables.rules
+systemctl restart iptables

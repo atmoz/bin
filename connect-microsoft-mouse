@@ -1,0 +1,2 @@
+sudo /etc/rc.d/bluetooth start
+sudo hidd --connect 00:12:5A:65:83:F4
