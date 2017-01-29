@@ -1,4 +1,4 @@
-sudo mount /dev/sdb1 /mnt
+sudo mount /dev/mmcblk0p1 /mnt
 sudo cp -Ruv /mnt/DCIM/* /home/atmoz/camera/raw/
 sudo chown -R atmoz:users /home/atmoz/camera/raw/
 sudo umount /mnt
