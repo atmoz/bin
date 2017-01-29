@@ -38,27 +38,23 @@ function detectMonitors() {
 
     echo "$toggle != $state"
     if [ "$state" != "init" -a "$state" == "$toggle" ]; then
-        echo "Nothing to do"
         return 0 # Nothing new to do
     fi
 
     if [ "$toggle" == "on" ]; then
         state="on"
 
-        echo "ON"
         i3-nagbar -m "External display connected" -t warning \
             -b "Use ONLY external display" "/home/atmoz/bin/monitor-toggle one on" \
             -b "Use both internal and external display" "/home/atmoz/bin/monitor-toggle two on"
         sleep 3
     else
         state="off"
-        echo "OFF"
         /home/atmoz/bin/monitor-toggle one off
     fi
 }
 
 while true; do
     detectMonitors
-    echo "Sleeping ..."
     sleep 2
 done
