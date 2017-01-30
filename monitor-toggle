@@ -1,67 +1,115 @@
 #!/bin/bash
 
-defaultProfile="one"
 internalMonitor="eDP1"
 externalMonitor="HDMI1"
+externalPosition="above"
+currentProfile="<autodetected>"
 
 function monitorIsEnabled() {
-    if [[ -n "$(xrandr | grep "$1" | grep "+")" ]]; then
-        return 0
-    else
-        return 1
-    fi
+    [[ -n "$(xrandr | grep "$1" | grep "+")" ]]
 }
 
 function monitorIsConnected() {
-    if [[ -n "$(xrandr | grep "$1" | grep " connected")" ]]; then
-        return 0
-    else
-        return 1
+    [[ -n "$(xrandr | grep "$1" | grep " connected")" ]]
+}
+
+function requireMonitor() {
+    if ! monitorIsConnected "$1"; then
+        echo "Monitor $1 is not connected"
+        return 1;
+    fi
+}
+
+function enableProfile() {
+    profile=${1:-"default"}
+
+    # Values: left-of, right-of, above, below or same-as
+    position="${2:-"$externalPosition"}"
+
+    case "$profile" in
+        one)
+            if requireMonitor $externalMonitor; then
+                xrandr --output $internalMonitor --off \
+                    --output $externalMonitor --auto #--scale 0.8x0.8
+                currentProfile="one"
+            fi
+            ;;
+
+        two)
+            if requireMonitor $externalMonitor; then
+                xrandr --output "$internalMonitor" --off \
+                    --output "$externalMonitor" --auto
+                xrandr --output "$internalMonitor" --auto \
+                    --output "$externalMonitor" --$position "$internalMonitor" --auto
+                currentProfile="two"
+            fi
+            ;;
+
+        default|*) # and fallback
+            xrandr --output $externalMonitor --off \
+                --output $internalMonitor --auto
+            currentProfile="default"
+            ;;
+    esac
+
+    echo "Current monitor profile: $currentProfile"
+
+    # this was needed to fix i3 bug, maybe no longer needed
+#    if [ -n "$(ps -A | grep i3)" ]; then
+#        i3-msg restart
+#    fi
+
+    nitrogen --restore # re-adjust wallpaper
+}
+
+function detectCurrentProfile() {
+    currentProfile="default"
+    if monitorIsEnabled "$externalMonitor"; then
+        currentProfile="one"
+        if monitorIsEnabled "$internalMonitor"; then
+            currentProfile="two"
+        fi
     fi
 }
 
 function toggleMonitors() {
+    detectCurrentProfile
     profile="$1"
 
-    # left-of, right-of, above, below, same-as
-    position="${3:-"above"}"
-
-    if [ -n "$2" ]; then
-        toggle="$2"
-    elif monitorIsConnected "$externalMonitor"; then
-        if monitorIsEnabled "$internalMonitor"; then
-            toggle="on"
-        else
-            toggle="off"
-        fi
+    if [ "$currentProfile" != "$profile" ]; then
+        enableProfile $profile $2
     else
-        toggle="off"
+        enableProfile default $2
     fi
-
-    if [ "$toggle" == "on" ]; then
-        case "$profile" in
-            "one")
-                xrandr --output $internalMonitor --off \
-                    --output $externalMonitor --auto #--scale 0.8x0.8
-                ;;
-
-            "two")
-                xrandr --output "$internalMonitor" --off \
-                    --output "$externalMonitor" --auto
-                xrandr --output "$internalMonitor" --auto \
-                    --output "$externalMonitor" --$position "$internalMonitor"
-                ;;
-        esac
-    else
-        xrandr --output $externalMonitor --off \
-            --output $internalMonitor --auto
-    fi
-
-    if [ -n "$(ps -A | grep i3)" ]; then
-        i3-msg restart
-    fi
-
-    nitrogen --restore
 }
 
-toggleMonitors ${1:-$defaultProfile} $2 $3
+function hotplugMonitors() {
+    detectCurrentProfile
+
+    if monitorIsConnected "$externalMonitor"; then
+        if [ "$currentProfile" == "default" ]; then
+            if which i3-nagbar; then
+                i3-nagbar -m "External monitor connected" -t warning \
+                    -b "ONE: Use only external monitor" "$0 one" \
+                    -b "TWO: Use both internal and external monitors" "$0 two" \
+                    -b "DEFAULT: Use only internal monitor" "$0 default" ;
+            else
+                enableProfile one
+            fi
+        fi
+    elif [ "$currentProfile" != "default" ]; then
+        enableProfile default
+    fi
+}
+
+profile=${1:-"default"}
+
+if [ "$profile" == "hotplug" ]; then
+    while true; do
+        hotplugMonitors
+        sleep 3
+    done
+else
+    toggleMonitors $profile $2
+fi
+
