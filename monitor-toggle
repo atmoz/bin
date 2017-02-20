@@ -48,6 +48,10 @@ function enableProfile() {
             ;;
     esac
 
+    afterProfileChange
+}
+
+function afterProfileChange() {
     # this was needed to fix i3 bug, maybe no longer needed
 #    if [ -n "$(ps -A | grep i3)" ]; then
 #        i3-msg restart
@@ -77,13 +81,11 @@ function detectCurrentProfile() {
 function toggleMonitors() {
     profile="$1"
     currentProfile="$(detectCurrentProfile)"
-    echo "current profile $currentProfile"
 
     if [[ "$currentProfile" =~ ^($profile|none)$ ]]; then
         profile="default"
     fi
 
-    echo "enable profile $profile"
     enableProfile $profile $2
 }
 
@@ -91,15 +93,8 @@ function hotplugMonitors() {
     currentProfile="$(detectCurrentProfile)"
 
     if monitorIsConnected "$externalMonitor"; then
-        if [ "$currentProfile" == "default" ]; then
-            if which i3-nagbar; then
-                i3-nagbar -m "External monitor connected" -t warning \
-                    -b "ONE: Use only external monitor" "$0 one" \
-                    -b "TWO: Use both internal and external monitors" "$0 two" \
-                    -b "DEFAULT: Use only internal monitor" "$0 default" ;
-            else
-                enableProfile one
-            fi
+        if [[ "$currentProfile" =~ ^(default|none)$ ]]; then
+            enableProfile one
         fi
     elif [ "$currentProfile" != "default" ]; then
         enableProfile default
@@ -113,6 +108,9 @@ if [ "$profile" == "hotplug" ]; then
         hotplugMonitors
         sleep 5
     done
+elif [ "$profile" == "auto" ]; then
+    hotplugMonitors
+    afterProfileChange
 else
     toggleMonitors $profile $2
 fi
