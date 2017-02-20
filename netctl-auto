@@ -1,0 +1,3 @@
+#!/bin/bash
+
+sudo systemctl ${1:-"restart"} netctl-auto@wlp3s0.service

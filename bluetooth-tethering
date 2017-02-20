@@ -1,0 +1,4 @@
+sudo systemctl stop netctl-auto@wlp3s0.service
+dbus-send --system --type=method_call --dest=org.bluez /org/bluez/hci0/dev_84_CF_BF_89_56_4B org.bluez.Network1.Connect string:nap
+sleep 2
+sudo dhcpcd bnep0

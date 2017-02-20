@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Missing frequency (in GHz). Example: 1.5"
+else
+    sudo cpupower frequency-set --max ${1}GHz
+fi
