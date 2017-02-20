@@ -1,0 +1,4 @@
+#!/bin/sh
+exec firejail --name=facebook \
+    --private=firejail-home/chromium-facebook \
+    /usr/bin/chromium --disable-internal-flash --disable-plugins-discovery

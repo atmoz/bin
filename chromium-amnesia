@@ -1,0 +1,11 @@
+#!/bin/sh
+
+tmpDir="$(mktemp -d --suffix=.firejail)"
+cp -r ~/firejail-home/chromium-normal/ $tmpDir
+
+firejail \
+    --private=$tmpDir/chromium-normal \
+    --private-tmp \
+    /usr/bin/chromium
+
+rm -fr $tmpDir
