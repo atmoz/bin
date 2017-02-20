@@ -1,6 +1,8 @@
-#!/bin/bash
+#!/usr/bin/sh
 #scrot /tmp/screen_locked.png
 #convert /tmp/screen_locked.png -scale 10% -scale 1000% /tmp/screen_locked.png
 #i3lock -i /tmp/screen_locked.png
 #i3lock -c 002b36
-i3lock -c 000000
+#i3lock -c 000000
+exec i3lock -c 002B36
+#i3lock -i /home/atmoz/background-locked.png
