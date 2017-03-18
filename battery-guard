@@ -1,8 +1,11 @@
 #!/bin/sh
 export DISPLAY=":0"
 
-critical_0=10
+notice_0=50
 warning_0=25
+critical_0=10
+
+notice_1=50
 warning_1=10
 
 tmpDir="/tmp/battery-guard-nagbar"
@@ -12,37 +15,44 @@ function nagbar() {
     type="$1"
     number="$2"
     message="$3"
+    showOrClear="${4:-0}" # 0: show, else: clear
     state="$tmpDir/${type}_${number}"
 
-    if [ "$message" == "clear" ]; then
+    if [ $showOrClear -eq 0 ]; then
+        if [ ! -f $state ]; then
+            touch $state
+            i3-nagbar -m "$message" -t $type -f "pango:DejaVu Sans Mono 10" 2>&1 1> /dev/null &
+        fi
+    else
         rm -f $state
-    elif [ ! -f $state ]; then
-        touch $state
-        i3-nagbar -m "$message" -t $type -f "pango:DejaVu Sans Mono 10" 2>&1 1> /dev/null &
     fi
 }
 
-acpi -b | awk -F'[,:%]' '{print $2, $3}' | {
+while true; do acpi -b | awk -F'[,:%]' '{print $2, $3}' | {
     read -r status_0 capacity_0
     read -r status_1 capacity_1
 
-    if [ "$status_1" = Discharging -a "$capacity_1" -lt $warning_1 ]; then
-        nagbar warning 1 "External battery getting low ($capacity_1)"
-    else
-        nagbar warning 1 clear
-    fi
+    test "$status_1" = Discharging -a "$capacity_1" -lt $notice_1
+    nagbar warning 1 "External battery is now under $notice_1 % ($capacity_1 %)" $?
 
-    if [ "$status_0" = Discharging -a "$capacity_0" -lt $warning_0 ]; then
-        nagbar warning 0 "Internal battery criticaly low ($capacity_0)"
-    else
-        nagbar warning 0 clear
-    fi
+    test "$status_1" = Discharging -a "$capacity_1" -lt $warning_1
+    nagbar warning 1 "External battery getting low ($capacity_1 %)" $?
+
+    test "$status_0" = Discharging -a "$capacity_0" -lt $notice_0
+    nagbar warning 0 "External battery is now under $notice_0 % ($capacity_0 %)" $?
+
+    test "$status_0" = Discharging -a "$capacity_0" -lt $warning_0
+    nagbar warning 0 "Internal battery getting low ($capacity_0 %)" $?
 
     if [ "$status_0" = Discharging -a "$capacity_0" -lt $critical_0 ]; then
-        logger "Critical battery threshold ($critical_0)"
-        nagbar error 1 "Internal battery critically low ($capacity_0)"
+        logger "Critical battery threshold ($critical_0 %)"
+        nagbar error 1 "Internal battery critically low ($capacity_0 %)"
         systemctl hibernate
     else
-        nagbar error 1 clear
+        nagbar error 1 clear 1
     fi
+
+    let "total = 1 + ($capacity_0 * 2) + ($capacity_1 * 2)"
+    sleep $total
 }
+done
