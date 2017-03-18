@@ -1,4 +1,5 @@
 #!/bin/sh
-exec firejail --name=facebook \
+exec cpulimit -i -l 100 firejail --name=facebook \
+    --nice=15 \
     --private=firejail-home/chromium-facebook \
     /usr/bin/chromium --disable-internal-flash --disable-plugins-discovery

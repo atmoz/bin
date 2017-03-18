@@ -2,7 +2,8 @@
 
 firejail \
     --name=chromium-normal \
-    --private=firejail-home/chromium-normal\
-    --private-tmp \
+    --nice=11 \
+    --private=firejail-home/chromium-normal \
     /usr/bin/chromium
 
+#    --private-tmp \
