@@ -18,7 +18,7 @@ function nagbar() {
     showOrClear="${4:-0}" # 0: show, else: clear
     state="$tmpDir/${type}_${number}"
 
-    if [ $showOrClear -eq 0 ]; then
+    if [ "$showOrClear" -eq 0 ]; then
         if [ ! -f $state ]; then
             touch $state
             i3-nagbar -m "$message" -t $type -f "pango:DejaVu Sans Mono 10" 2>&1 1> /dev/null &
@@ -36,7 +36,7 @@ while true; do acpi -b | awk -F'[,:%]' '{print $2, $3}' | {
     nagbar warning 1 "External battery is now under $notice_1 % ($capacity_1 %)" $?
 
     test "$status_1" = Discharging -a "$capacity_1" -lt $warning_1
-    nagbar warning 1 "External battery getting low ($capacity_1 %)" $?
+    nagbar warning 2 "External battery getting low ($capacity_1 %)" $?
 
     test "$status_0" = Discharging -a "$capacity_0" -lt $notice_0
     nagbar warning 0 "External battery is now under $notice_0 % ($capacity_0 %)" $?
