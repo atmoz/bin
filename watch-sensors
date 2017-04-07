@@ -1,1 +1,6 @@
-watch -n 1.5 -t 'sensors -A; cat /proc/cpuinfo | grep "cpu MHz"'
+watch -n 1.5 -t '\
+sensors -A; \
+cat /proc/cpuinfo | grep "cpu MHz"; \
+echo -n "Max frequency: "; \
+echo $(( $(cat /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq) / 1000 )); \
+'
