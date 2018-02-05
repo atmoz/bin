@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# Make 80 column text fit perfectly
 read -r -d '' header << 'EOS'
 ---
 geometry: margin=2.25cm
@@ -13,4 +14,5 @@ read -r -d '' footer << 'EOS'
 ```
 EOS
 
-echo $header $(cat $1) $footer | pandoc -o $(n).pdf -
+# Feed it all to pandoc (echo madness for consistent linebreaks)
+echo "$(echo "$header"; echo "$(cat $1)"; echo "$footer")" | pandoc -o $1.pdf -
