@@ -1,3 +1,6 @@
 #!/bin/bash
+set -ex
 
-sudo systemctl ${1:-"restart"} netctl-auto@wlp3s0.service
+[[ $UID != 0 ]] && exec sudo -E "$(readlink -f "$0")" "$@"
+
+systemctl ${1:-"restart"} netctl-auto@wlp3s0.service

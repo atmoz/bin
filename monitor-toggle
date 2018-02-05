@@ -1,7 +1,7 @@
 #!/bin/bash
 
 internalMonitor="eDP1"
-externalMonitor="HDMI1"
+externalMonitor="HDMI1" # "DP1"
 externalPosition="above"
 
 function monitorIsEnabled() {

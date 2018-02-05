@@ -1,0 +1,3 @@
+rmprobe iwlmvm iwlwifi mac80211 cfg80211
+modprobe iwlmvm iwlwifi mac80211 cfg80211
+~/bin/netctl-auto

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+read -r -d '' header << 'EOS'
+---
+geometry: margin=2.25cm
+fontsize: 12pt
+---
+\pagenumbering{gobble}
+```
+EOS
+
+read -r -d '' footer << 'EOS'
+```
+EOS
+
+echo $header $(cat $1) $footer | pandoc -o $(n).pdf -

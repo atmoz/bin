@@ -1,0 +1,10 @@
+#!/bin/bash
+
+packages="$(pacman -Qdtq)"
+
+if [ -n "$packages" ]; then
+    sudo pacman -Rs $packages
+else
+    echo "Found no packages"
+fi
+

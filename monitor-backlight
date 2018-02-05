@@ -1,0 +1,27 @@
+#!/bin/bash
+
+round() {
+    echo "($1+0.5)/1" | bc
+}
+
+op="${1:-"get"}"
+v=$(round $(xbacklight -get))
+
+if [ -n "$2" ]; then
+    step=$2
+else
+    if [ $v -gt 20 ]; then
+        step=10
+    elif [ $v -gt 5 ]; then
+        step=5
+    else
+        step=1
+    fi
+fi
+
+if [[ $op =~ (inc|dec) ]]; then
+    xbacklight -$op $step
+else
+    echo $v
+fi
+

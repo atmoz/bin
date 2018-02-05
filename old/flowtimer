@@ -1,0 +1,82 @@
+#!/bin/bash
+stty -echo # Do not output user input
+
+trap onExit EXIT
+trap "exit 0" SIGINT SIGTERM
+
+function onExit() {
+    stty echo
+    echo; echo "[$(t)] Exiting"
+}
+
+function echo_replace() {
+    echo -en "\r\e[K[$(t)] $@"
+}
+
+function t() {
+    date +%T
+}
+
+function totalBreakTime() {
+    echo $(( ($b + $bb) / 60 ))
+}
+
+function nagbar() {
+    i3-nagbar -m "$1" -t warning -f "pango:DejaVu Sans Mono 10" 2>&1 1> /dev/null &
+}
+
+echo "[$(t)] Starting timer (ENTER or SPACE: toggle work/break, R: reset)"
+
+w=0   # work time
+b=0   # break time
+bb=0  # break buffer
+m=0   # mode (0:work, 1:break)
+nag=0 # nag level
+timeStart=$(date +"%s")
+timeEnd=$timeStart
+while true; do
+    if [ $m -eq 0 ]; then
+        let "w=w + (timeEnd - timeStart)"
+        let "b=w/3"
+        echo_replace "Time at work: $(($w/60)) (earned break time: $(totalBreakTime))"
+        if [ $nag -lt 1 -a $(($w/60)) -gt 25 ]; then
+            nag=1; nagbar "25 minute mark. Nice work! You have earned $(totalBreakTime) minutes of break time"
+        elif [ $nag -lt 2 -a $(($w/60)) -gt 52 ]; then
+            nag=2; nagbar "52 minute mark. Optimal time for a break! $(totalBreakTime) minutes of break time waiting for you"
+        fi
+    elif [ $b -gt 0 ]; then
+        let "w=0"
+        let "b=b - (timeEnd - timeStart)"
+        echo_replace "Time left of break: $(($b/60))"
+    else
+        nagbar "Break is over!"
+        m=0
+        echo_replace "Break is over! Hit any key to continue working ..."
+        read -rsn1 input
+        echo; echo "[$(t)] Back to work"
+    fi
+
+    timeStart=$(date +"%s")
+    read -rsn1 -t 1 input
+    if [ $? -eq 0 ]; then
+        case "$input" in
+            "")
+                if [ $m -eq 0 ]; then
+                    m=1; nag=0
+                    let "b=b+bb" # Add break buffer
+                    echo; echo "[$(t)] Taking a break"
+                else
+                    m=0; nag=0
+                    let "bb=b" # Save break time for later
+                    echo; echo "[$(t)] Back to work"
+                fi
+                ;;
+            r|R)
+                echo; echo "[$(t)] Reset"
+                m=0; w=0; b=0; bb=0; nag=0
+                ;;
+            q|Q) exit 0 ;;
+        esac
+    fi
+    timeEnd=$(date +"%s")
+done

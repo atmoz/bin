@@ -1,0 +1,19 @@
+#!/bin/bash
+
+function ask()
+{   
+	echo -n "$@" '[Y/n] ' ; read ans
+	case "$ans" in
+		n*|N*) return 1 ;;
+		*) return 0 ;;
+	esac
+
+#	echo "$@"
+#	select yn in "Yes" "No"; do
+#	    case $yn in
+#		Yes ) return 0 ;;
+#		No ) return 1 ;;
+#	    esac
+#	done
+}
+

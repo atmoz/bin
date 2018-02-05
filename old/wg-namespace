@@ -1,0 +1,59 @@
+#!/bin/bash
+set -ex
+
+conf="hydrogen"
+#cable="enp0s25"
+wifi="wlp3s0"
+address="172.25.140.1/24"
+
+[[ $UID != 0 ]] && exec sudo -E "$(readlink -f "$0")" "$@"
+
+up() {
+    killall wpa_supplicant dhcpcd || true
+    systemctl stop netctl-auto@wlp3s0.service
+    ip netns add physical
+    ip -n physical link add wgvpn0 type wireguard
+    ip -n physical link set wgvpn0 netns 1
+    wg setconf wgvpn0 /etc/wireguard/$conf.conf
+    ip addr add $address dev wgvpn0 # 192.168.4.33/32
+#    ip link set $cable down
+    ip link set $wifi down
+#    ip link set $cable netns physical
+    iw phy phy0 set netns name physical
+#    ip netns exec physical dhcpcd -b $cable
+##    ip netns exec physical dhcpcd -b $wifi
+#    ip netns exec physical wpa_supplicant -B -c/run/netctl/wpa_supplicant-$wifi.conf -i$wifi
+    ip link set wgvpn0 up
+#    ip netns exec physical ip link set $wifi up
+    ip route add default dev wgvpn0
+    systemctl start netctl-physical-auto@wlp3s0.service
+}
+
+down() {
+    killall wpa_supplicant dhcpcd || true
+    systemctl stop netctl-physical-auto@wlp3s0.service
+#    ip -n physical link set $cable down
+##    ip -n physical link set $wifi down
+#    ip -n physical link set $cable netns 1
+    ip netns exec physical iw phy phy0 set netns 1
+    ip link del wgvpn0
+    ip netns del physical
+#    dhcpcd -b $cable
+    dhcpcd -b $wifi
+#    wpa_supplicant -B -c/run/netctl/wpa_supplicant-$wifi.conf -i$wifi
+    systemctl start netctl-auto@wlp3s0.service
+}
+
+execi() {
+    exec ip netns exec physical sudo -E -u \#${SUDO_UID:-$(id -u)} -g \#${SUDO_GID:-$(id -g)} -- "$@"
+}
+
+command="$1"
+shift
+
+case "$command" in
+    up) up "$@" ;;
+    down) down "$@" ;;
+    exec) execi "$@" ;;
+    *) echo "Usage: $0 up|down|exec" >&2; exit 1 ;;
+esac

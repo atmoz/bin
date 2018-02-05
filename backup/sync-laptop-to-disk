@@ -1,0 +1,22 @@
+#!/bin/bash
+set -e
+
+dev=/dev/sdb1
+#mapper=/dev/mapper/luks-35f8cae8-4ca6-4463-bb10-21cd85651615
+#mount=/run/media/atmoz/e1cbc2a4-3e7a-49c8-b23c-78f4162f6295
+mount=/mnt
+
+sudo cryptsetup open --type luks $dev backup
+sudo mount /dev/mapper/backup /mnt
+
+#udisksctl unlock -b $dev
+#udisksctl mount -b $mapper
+rsync -av --stats /home/atmoz/camera/ $mount/camera
+rsync -av --stats /home/atmoz/Dropbox/ $mount/Dropbox
+rsync -v -rLptgoD --stats /home/atmoz/backup/ /mnt/backup
+sleep 2
+
+sudo umount /mnt
+sudo cryptsetup close backup
+#udisksctl unmount -b $mapper
+#udisksctl lock -b $dev

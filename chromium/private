@@ -1,6 +1,7 @@
 #!/bin/sh
 
 firejail \
+    --name=private \
     --private --private-tmp \
     --dns=8.8.8.8 --dns=8.8.4.4 \
     /usr/bin/chromium --incognito

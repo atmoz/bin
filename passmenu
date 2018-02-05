@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+
+shopt -s nullglob globstar
+
+#####################################################################
+# Parse arguments
+#####################################################################
+
+typeit=0
+typeDelay=30
+enter=0
+tab=1
+browse=0
+clipTime=45
+xclipArgs="-selection clipboard"
+declare -a get=("password")
+
+while [ -n "$1" ]; do
+    case "$1" in
+        --get) IFS=':' read -a get <<< "$2"; shift 2 ;;
+        --browse) browse=1; shift ;;
+        --type) typeit=1; shift ;;
+        --enter) enter=1; shift ;;
+        --no-tab) tab=0; shift ;;
+        --delay) typeDelay="$2"; shift 2;;
+        --clip-time) clipTime="$2"; shift 2;;
+        --xclip-args) xclipArgs="$2"; shift 2;;
+        --) shift; break ;;
+        *) break ;;
+    esac
+done
+
+#####################################################################
+# Helper functions
+#####################################################################
+
+function findPasswordFiles() {
+    prefix=${PASSWORD_STORE_DIR-~/.password-store}
+    password_files=( "$prefix"/**/*.gpg )
+    password_files=( "${password_files[@]#"$prefix"/}" )
+    password_files=( "${password_files[@]%.gpg}" )
+
+    printf '%s\n' "${password_files[@]}"
+}
+
+function getKeys() {
+    # 1. Replace password value with key
+    # 2. Remove invalid lines
+    # 3. Remove values
+    echo "$@" | sed \
+        -e '1c\password' \
+        -e '/^[^:]*\:.*$/!d' \
+        -e 's/^\([^:]*\)\:.*$/\1/'
+}
+
+function getValue() {
+    if [[ "$1" == "password" ]]; then
+        echo "$2" | { IFS= read -r pass; printf %s "$pass"; }
+    else
+        echo "$2" | sed -n "s/^$1\:[[:blank:]]*\(.*\)$/\1/p"
+    fi
+}
+
+function typeText() {
+    echo -n "$@" | xdotool type --clearmodifiers --delay $typeDelay --file -
+}
+
+function typeEnter() {
+    xdotool key --delay $typeDelay Return
+}
+
+function typeTab() {
+    xdotool key --delay $typeDelay Tab
+}
+
+function clipboard() {
+    string="$@"
+    oldClip="$(xclip $xclipArgs -o 2>/dev/null)"
+    echo -n "$string" | xclip $xclipArgs
+    {
+        sleep $clipTime
+        if [ "$(xclip $xclipArgs -o 2>/dev/null)" == "$string" ]; then
+            echo -n "$oldClip" | xclip $xclipArgs
+        fi
+    } &
+}
+
+#####################################################################
+# Select and unlock password file
+#####################################################################
+
+password=$(findPasswordFiles | dmenu "$@")
+[[ -n $password ]] || exit
+
+lines="$(pass show "$password" 2>/dev/null)" || exit 1
+
+#####################################################################
+# Browse custom values with dmenu
+#####################################################################
+
+if [[ $browse -eq 1 ]]; then
+    keys="$(getKeys "$lines")"
+    key="password"
+    values=""
+
+    if [[ $typeit -eq 0 ]]; then
+        prompt="Copy to clipboard: "
+    else
+        prompt="Write to focused input: "
+    fi
+
+    while true; do
+        key="$(echo -e "$keys" | IFS=$'\n' dmenu "$@" -p "$prompt")"
+
+        [[ -n "$key" ]] || break
+        [[ -n "$value" ]] && values="$values"$'\n'
+
+        value="$(getValue "$key" "$lines")"
+        if [[ $typeit -eq 1 ]]; then
+            typeText "$value"
+            if [[ $tab -eq 1 ]]; then
+                typeTab
+            fi
+        else
+            prompt="$prompt $key"
+            values="$values$value"
+        fi
+    done
+
+    if [[ $typeit -eq 0 ]]; then
+        clipboard "$values"
+    fi
+
+#####################################################################
+# Get password and/or custom values with arguments
+#####################################################################
+
+else
+    values=""
+
+    for key in "${get[@]}"; do
+        if [ "$key" == "password" ]; then
+            value="$(echo "$lines" | head -n1 )"
+        else
+            value="$(getValue "$key" "$lines")"
+        fi
+
+        [[ -n "$values" ]] && values="$values"$'\n'
+        values="$values$value"
+    done
+
+    if [[ $typeit -eq 0 ]]; then
+        clipboard "$values"
+    else
+        vc=0 # value counter
+        while IFS=$'\n' read -r value || [[ -n "$value" ]]; do
+            let "vc++"
+            if [[ $vc -gt 1 && $tab -eq 1 ]]; then
+                typeTab
+            fi
+            typeText "$value"
+        done <<< $values
+
+        if [[ $enter -eq 1 ]]; then
+            typeEnter
+        fi
+    fi
+fi
+

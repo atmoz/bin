@@ -1,0 +1,21 @@
+#!/bin/bash
+#source ~/.bashrc
+
+#function dup() {
+#    newTerm="sakura"
+#    ($newTerm &) 2> /dev/null
+#}
+#
+#echo "d: dropbox"
+#echo "w: workspace"
+#echo "s: study"
+#
+#sleep 1
+#
+#cd workspace
+#dir="$(find * -type d | fzf)"
+#cd "$dir"
+
+cd ${1-"$(pwd)"}
+file="$(fzf)" || exit 0
+rifle "$file"

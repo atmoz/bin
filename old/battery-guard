@@ -47,7 +47,7 @@ while true; do acpi -b | awk -F'[,:%]' '{print $2, $3}' | {
     if [ "$status_0" = Discharging -a "$capacity_0" -lt $critical_0 ]; then
         logger "Critical battery threshold ($critical_0 %)"
         nagbar error 1 "Internal battery critically low ($capacity_0 %)"
-        systemctl hibernate
+        #systemctl hibernate
     else
         nagbar error 1 clear 1
     fi

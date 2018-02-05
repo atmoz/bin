@@ -1,0 +1,4 @@
+#!/bin/sh
+output=`ls -1 ~/launch`
+cmd=`echo "$output" | dmenu -i -b -l 10` 
+sh -c "~/launch/$cmd &"
