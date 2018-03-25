@@ -1,6 +1,0 @@
-#!/bin/bash
-set -ex
-
-[[ $UID != 0 ]] && exec sudo "$(readlink -f "$0")" "$@"
-
-/root/bin/backup

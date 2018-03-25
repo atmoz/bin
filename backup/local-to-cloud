@@ -1,0 +1,38 @@
+#!/bin/bash
+# Ask to run backup if some time since last backup
+set -eux
+
+user=atmoz
+this="$(readlink -f $0)"
+dir="/root/backup"
+log="/home/$user/.last-cloud-backup.log"
+timeBetweenBackups="$((60 * 60 * 24))"
+now="$(date +%s)"
+
+# If running via netctl hook as root, switch to normal user
+if [ "$(whoami)" != "$user" ]; then
+    # For i3-nagbar to work
+    export DISPLAY=":0"
+    export XAUTHORITY=/home/$user/.Xauthority
+    export TERMINAL=sakura
+    exec sudo -E -u $user $this
+fi
+
+if [ -f $log ]; then
+    lastBackupTime="$(stat -t $log | cut -d' ' -f13)"
+else
+    lastBackupTime=0
+fi
+
+if [ "${1:-}" == "run" ]; then
+    sudo bash -c "cd $dir && \
+        ./remove-old.sh && \
+        ./incremental.sh && \
+        ./cleanup.sh && \
+        ./status.sh" 2>&1 > $log
+    echo; read -p "Press ENTER to exit"
+elif [ $(($lastBackupTime + $timeBetweenBackups)) -lt $now ]; then
+    i3-nagbar -m "Time for backup! 24+ hours since last time" \
+        -t warning -f "pango:Fira Mono 11" \
+        -b " Run backup now " "$this run" 2>&1 1> /dev/null &
+fi
