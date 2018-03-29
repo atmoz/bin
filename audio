@@ -1,0 +1,43 @@
+#!/bin/bash
+set -eu
+
+source ~/bin/notify_replace
+
+function notify() {
+    notify_replace -u low "$@"
+}
+
+function getVolume() {
+    echo "$amixerOutput" | grep -Po '\d+%'
+}
+
+amixerOutput="$(amixer get Master | grep "Front Left")"
+
+case "${1:-}" in
+    toggle)
+        amixer set Master toggle
+        if [ "$(echo "$amixerOutput" | grep -Po '\[o.+\]')" == "[off]" ]; then
+            notify -i "audio-volume-muted" "Muted"
+        else
+            notify -i "audio-volume-medium" "Unmuted" "$(getVolume)"
+        fi
+        ;;
+    raise)
+        amixer set Master 5%+ unmute
+        notify -i "audio-volume-medium" "$(getVolume)"
+        ;;
+    lower)
+        amixer set Master 5%- unmute
+        notify -i "audio-volume-medium" "$(getVolume)"
+        ;;
+    next)
+        dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify \
+            /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next
+        ;;
+    prev)
+        dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify \
+            /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous
+        ;;
+esac
+
+

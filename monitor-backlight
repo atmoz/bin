@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ~/bin/notify_replace
+
 round() {
     echo "($1+0.5)/1" | bc
 }
@@ -21,6 +23,7 @@ fi
 
 if [[ $op =~ (inc|dec) ]]; then
     xbacklight -$op $step
+    notify_replace -u low -i video-display "$v%"
 else
     echo $v
 fi
