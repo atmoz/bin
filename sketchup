@@ -1,0 +1,5 @@
+export WINEPREFIX=~/sketchup
+export WINEARCH=win64
+
+cd sketchup/drive_c/Program\ Files/SketchUp/SketchUp\ 2017/
+wine SketchUp.exe
