@@ -8,15 +8,13 @@ function notify() {
 }
 
 function getVolume() {
-    echo "$amixerOutput" | grep -Po '\d+%'
+    amixer get Master | grep "Front Left" | grep -Po '\d+%'
 }
-
-amixerOutput="$(amixer get Master | grep "Front Left")"
 
 case "${1:-}" in
     toggle)
         amixer set Master toggle
-        if [ "$(echo "$amixerOutput" | grep -Po '\[o.+\]')" == "[off]" ]; then
+        if [ "$(amixer get Master | grep "Front Left" | grep -Po '\[o.+\]')" == "[off]" ]; then
             notify -i "audio-volume-muted" "Muted"
         else
             notify -i "audio-volume-medium" "Unmuted" "$(getVolume)"
