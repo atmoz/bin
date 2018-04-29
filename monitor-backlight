@@ -6,12 +6,14 @@ round() {
     echo "($1+0.5)/1" | bc
 }
 
-op="${1:-"get"}"
-v=$(round $(xbacklight -get))
+getValue() {
+    round $(xbacklight -get)
+}
 
-if [ -n "$2" ]; then
-    step=$2
-else
+op="${1:-"get"}"
+v="$(getValue)"
+
+if [[ $op =~ (inc|dec) ]]; then
     if [ $v -gt 20 ]; then
         step=10
     elif [ $v -gt 5 ]; then
@@ -19,12 +21,10 @@ else
     else
         step=1
     fi
-fi
 
-if [[ $op =~ (inc|dec) ]]; then
     xbacklight -$op $step
+    v="$(getValue)" # get new value
     notify_replace -u low -i video-display "$v%"
 else
     echo $v
 fi
-
