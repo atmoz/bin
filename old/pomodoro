@@ -1,28 +1,91 @@
 #!/bin/bash
+set -eux
 
-pomodoroLength=25
-#pauseLength=35
-COUNTER=$pomodoroLength
+((pomodoroLength=25*60))
+((breakLength=5*60))
 
-function showCounter {
-    echo -ne "\r$COUNTER minutes left and counting ... "
+notifyId="$(basename $0)"
+notifyFile="/tmp/notify-id-$notifyId"
+lockFile="/tmp/notify-lock-$notifyId"
+
+function notify() {
+    notify-send --replace-file="$notifyId" "$@"
 }
 
-function startPomodoro {
-    echo "Pomodoro started!"
+function cleanup() {
+    rm -f "$lockFile"
+}
 
-    while sleep 60; do
-        if (( $COUNTER <= 0 )); then
-            echo -ne "\rPomodoro is over, locking screen. \a"
-            xscreensaver-command --lock
-            break
+function abort() {
+    notify -i edit-delete "$mode aborted"
+    exit 0
+}
+
+function showCounter() {
+    notify -u low -i "$2" -t 61000 "$3" "$(((${1}%3600)/60)) minutes left"
+}
+
+function runCounter() {
+    counter=$1
+    mode=$2
+    notifyIcon=$3
+    notifyTitle=$4
+    notifyDelay=0
+
+    showCounter $counter $notifyIcon $notifyTitle
+
+    # short sleep to let script handle signaling
+    while sleep 1; do
+        if (( $counter > 0 )); then
+            let counter-- || true
+            # quickfix: integer division 119/60 will show 1 min, so notify 5 sec
+            # before that happens, or else notify will show a strange jump from 25 to 23
+            if (( $notifyDelay >= 55 )); then
+                # update notification only once per minute
+                # (let's user close it and read things behind it)
+                showCounter $counter $notifyIcon $notifyTitle
+                notifyDelay=0
+            else
+                let notifyDelay++ || true
+            fi
         else
-            showCounter
-            let COUNTER--
+            if [ $mode == "pomodoro" ]; then
+                lockdown=26
+                while [[ "$lockdown" -ge 1 ]]; do
+                    let lockdown-- || true
+                    notify -i trophy-gold "Pomodoro completed!" \
+                        "Take a short break. Locking screen in $lockdown seconds ..."
+                    sleep 1
+                done
+
+                lock
+                startBreak
+            else
+                notify "Break is over"
+            fi
+            break
         fi
     done
 }
 
-startPomodoro
-showCounter
+function startPomodoro() {
+    runCounter $pomodoroLength "pomodoro" "emblem-urgent" "Pomodoro"
+}
+
+function startBreak() {
+    runCounter $breakLength "break" "system-log-out" "Break"
+}
+
+trap "cleanup" EXIT
+trap "abort" HUP INT TERM KILL
+
+if [ -f "$lockFile" ]; then
+    # TODO: Improve termination of process (if possible)
+    #kill "$(cat "$lockFile")" # can be unsafe (e.g. not deleted after reboot)
+    pkill -xo "$notifyId" # assuming id is unique (pomodoro)
+    exit 0
+else
+    echo $$ > "$lockFile"
+    startPomodoro
+fi
 
