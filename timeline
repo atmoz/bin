@@ -29,8 +29,8 @@ class Timer:
         self.bar = progressbar
         self.timeUp = timeUp
         self.timeDown = timeDown
-        self.stepUp = 0.5/timeUp
-        self.stepDown = -0.5/timeDown
+        self.stepUp = 1/timeUp
+        self.stepDown = -1/timeDown
         self.counter = 0
         self.goingUp = True
 
@@ -77,6 +77,10 @@ else:
     run(["kill", existing_pid])
     cleanExit()
 
+#settings = Gtk.Settings.get_default()
+#settings.set_property("gtk-theme-name", "Numix")
+#settings.set_property("gtk-application-prefer-dark-theme", True)
+
 window = Gtk.Window(title="timeline")
 #window.connect("destroy", Gtk.main_quit)
 
@@ -94,7 +98,7 @@ window.show_all()
 run(["notify-send", "-i", "appointment-new", "Timer started"])
 
 timer = Timer(bar, 25*60, 5*60)
-GLib.timeout_add(500, timer)
+GLib.timeout_add(1000, timer)
 GLib.MainLoop().run()
 
 #Gtk.main()
