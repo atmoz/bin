@@ -1,15 +1,15 @@
 #!/bin/bash
 set -eux
 
-((pomodoroLength=25*60))
-((breakLength=5*60))
+(( pomodoroLength=25*60 ))
+(( breakLength=5*60 ))
 
-notifyId="$(basename $0)"
+notifyId="$(basename "$0")"
 notifyFile="/tmp/notify-id-$notifyId"
 lockFile="/tmp/notify-lock-$notifyId"
 
 function notify() {
-    notify-send --replace-file="$notifyId" "$@"
+    notify-send --replace-file="$notifyFile" "$@"
 }
 
 function cleanup() {
@@ -32,27 +32,27 @@ function runCounter() {
     notifyTitle=$4
     notifyDelay=0
 
-    showCounter $counter $notifyIcon $notifyTitle
+    showCounter "$counter" "$notifyIcon" "$notifyTitle"
 
     # short sleep to let script handle signaling
     while sleep 1; do
-        if (( $counter > 0 )); then
-            let counter-- || true
+        if (( counter > 0 )); then
+            (( counter-- )) || true
             # quickfix: integer division 119/60 will show 1 min, so notify 5 sec
             # before that happens, or else notify will show a strange jump from 25 to 23
-            if (( $notifyDelay >= 55 )); then
+            if (( notifyDelay >= 55 )); then
                 # update notification only once per minute
                 # (let's user close it and read things behind it)
-                showCounter $counter $notifyIcon $notifyTitle
+                showCounter "$counter" "$notifyIcon" "$notifyTitle"
                 notifyDelay=0
             else
-                let notifyDelay++ || true
+                (( notifyDelay++ )) || true
             fi
         else
-            if [ $mode == "pomodoro" ]; then
+            if [ "$mode" == "pomodoro" ]; then
                 lockdown=26
                 while [[ "$lockdown" -ge 1 ]]; do
-                    let lockdown-- || true
+                    (( lockdown-- )) || true
                     notify -i trophy-gold "Pomodoro completed!" \
                         "Take a short break. Locking screen in $lockdown seconds ..."
                     sleep 1
@@ -77,7 +77,7 @@ function startBreak() {
 }
 
 trap "cleanup" EXIT
-trap "abort" HUP INT TERM KILL
+trap "abort" HUP INT TERML
 
 if [ -f "$lockFile" ]; then
     # TODO: Improve termination of process (if possible)

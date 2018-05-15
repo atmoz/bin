@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Make 80 column text fit perfectly
 read -r -d '' header << 'EOS'
@@ -15,4 +15,4 @@ read -r -d '' footer << 'EOS'
 EOS
 
 # Feed it all to pandoc (echo madness for consistent linebreaks)
-echo "$(echo "$header"; echo "$(cat $1)"; echo "$footer")" | pandoc -o $1.pdf -
+echo "$(echo "$header"; echo "$(cat "$1")"; echo "$footer")" | pandoc -o "$1.pdf" -
