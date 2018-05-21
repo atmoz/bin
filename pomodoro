@@ -39,10 +39,10 @@ signal.signal(signal.SIGINT, abort)
 signal.signal(signal.SIGTERM, abort)
 
 run(["notify-send", "-i", "appointment-new", "Timer started"])
-run(["timeline", "25", "m"])
+run(["timeline", "25", "m", "dec"])
 
 run(["notify-send", "-i", "starred", "Time over!", "You can now take a break"])
-run(["timeline", "5", "m"])
+run(["timeline", "5", "m", "inc"])
 
 run(["notify-send", "Break is over"])
 cleanExit()
