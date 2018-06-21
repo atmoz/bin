@@ -3,6 +3,6 @@
 firejail \
     --name=chromium-untrusted \
     --nice=11 \
-    --private=firejail-home/chromium/untrusted \
+    --private=.firejail-home/chromium/untrusted \
     /usr/bin/chromium
 

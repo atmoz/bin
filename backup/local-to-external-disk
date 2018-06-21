@@ -7,13 +7,15 @@ dev=/dev/sdb1
 mount=/mnt
 
 sudo cryptsetup open --type luks $dev backup
-sudo mount /dev/mapper/backup /mnt
+sudo mount /dev/mapper/backup $mount
 
 #udisksctl unlock -b $dev
 #udisksctl mount -b $mapper
-rsync -av --stats /home/atmoz/camera/ $mount/camera
-rsync -av --stats /home/atmoz/Dropbox/ $mount/Dropbox
-rsync -v -rLptgoD --stats /home/atmoz/backup/ /mnt/backup
+rsync -av --stats /home/atmoz/keep/ $mount/keep
+rsync -av --stats /home/atmoz/archive/ $mount/archive
+#rsync -av --stats /home/atmoz/Dropbox/ $mount/Dropbox
+#rsync -v -rLptgoD --stats /home/atmoz/backup/ $mount/backup
+sync
 sleep 2
 
 sudo umount /mnt

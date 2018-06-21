@@ -3,5 +3,5 @@
 exec cpulimit -i -l 150 firejail \
     --name=social \
     --nice=15 \
-    --private=firejail-home/chromium/social \
+    --private=.firejail-home/chromium/social \
     /usr/bin/chromium --disable-internal-flash --disable-plugins-discovery
