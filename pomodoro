@@ -5,9 +5,11 @@ import sys
 import os
 from subprocess import run
 
+
 def abort(signal, frame):
     run(["notify-send", "-i", "edit-delete", "Timer aborted"])
     cleanExit()
+
 
 def cleanExit():
     try:
@@ -16,17 +18,18 @@ def cleanExit():
         pass
     sys.exit(0)
 
-lockFile = '/tmp/atmoz-pomodoro.lock'
+
+lockFile = "/tmp/atmoz-pomodoro.lock"
 existing_pid = 0
 try:
-    with open(lockFile, 'r') as f:
+    with open(lockFile, "r") as f:
         existing_pid = f.read()
     f.closed
 except:
     pass
 
 if existing_pid == 0:
-    with open(lockFile, 'w') as f:
+    with open(lockFile, "w") as f:
         f.write(str(os.getpid()))
     f.closed
 else:
@@ -41,9 +44,9 @@ signal.signal(signal.SIGTERM, abort)
 run(["notify-send", "-i", "appointment-new", "Timer started"])
 run(["timeline", "25", "m", "dec"])
 
-run(["notify-send", "-i", "starred", "Time over!", "You can now take a break"])
+run(["notify-send", "-i", "starred", "-t", str(5000 * 60),
+    "Time over!", "You can now take a break"])
 run(["timeline", "5", "m", "inc"])
 
 run(["notify-send", "Break is over"])
 cleanExit()
-

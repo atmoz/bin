@@ -1,17 +1,17 @@
 #!/bin/bash
 # Limit execution to one at a time (fix duplicate messages on key spam)
-notifyId="$(basename $0)"
+notifyId="$(basename "$0")"
 notifyFile="/tmp/notify-id-$notifyId"
 lockFile="/tmp/notify-lock-$notifyId"
-lastRun="$(stat -t $lockFile 2>/dev/null | cut -d' ' -f12)"
+lastRun="$(stat -t "$lockFile" 2>/dev/null | cut -d' ' -f12)"
 now="$(date +%s)"
-if [ -n "$lastRun" ] && [ $(($now-$lastRun)) -le 1 ]; then
+if [ -n "$lastRun" ] && [ $((now-lastRun)) -le 1 ]; then
     exit 0
 else
     touch "$lockFile"
 fi
-trap "rm -f '$lockFile'" EXIT
+trap 'rm -f "$lockFile"' EXIT
 
 function notify_replace() {
-    notify-send --replace-file="$notifyId" "$@"
+    notify-send --replace-file="$notifyFile" "$@"
 }
