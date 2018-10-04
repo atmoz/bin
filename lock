@@ -2,7 +2,7 @@
 
 # This check prevents lock-screen-before-suspend.service to fail
 if ! pidof i3lock > /dev/null; then
-    exec i3lock -c 002B36
+    exec i3lock -c 002B36 -n
 else
     exit 0
 fi

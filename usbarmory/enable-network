@@ -1,0 +1,7 @@
+#!/bin/bash
+set -xe
+
+sudo ip link set enp0s20u2 up
+sudo iptables -t nat -A POSTROUTING -s 10.0.0.1/32 -o wlp3s0 -j MASQUERADE
+sudo ip addr add 10.0.0.2/24 dev enp0s20u2
+#sudo dhcpcd enp0s20u2

@@ -1,4 +1,4 @@
 #!/bin/bash
 set -x
 
-sudo /usr/local/sbin/backup.sh
+sudo /usr/local/sbin/backup.sh "$@"

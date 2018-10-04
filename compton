@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [ ${#@} = 0 ]; then
+    compton -b --backend glx --vsync opengl -cGCz -r 5 -l -8 -t -8 -o 0.5 #--shadow-exclude 'name ?= "synapse"' #-i 0.9 #--inactive-dim 0.2
+else
+    compton "$@"
+fi

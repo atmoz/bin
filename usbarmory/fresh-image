@@ -1,0 +1,14 @@
+#!/bin/bash
+
+sudo dd if=/dev/zero of=/dev/mmcblk0 bs=1M count=8
+sync
+
+sudo fdisk /dev/mmcblk0
+sudo mkfs.ext4 /dev/mmcblk0p1
+sudo mount /dev/mmcblk0p1 /mnt
+sudo bsdtar -xpf ~/firejail-home/chromium/untrusted/Downloads/ArchLinuxARM-usbarmory-latest.tar.gz -C /mnt
+sync
+
+sudo dd if=/mnt/boot/u-boot.imx of=/dev/mmcblk0 bs=512 seek=2 conv=fsync
+sync
+

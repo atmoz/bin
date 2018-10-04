@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ ${#@} = 0 ]; then
+    redshift -l 60.3:5.3 -m vidmode -t 4400:2800 #-b 1:0.8
+else
+    redshift "$@"
+fi
+

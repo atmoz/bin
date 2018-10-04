@@ -1,0 +1,28 @@
+#!/bin/sh
+# https://www.loganmarchione.com/2017/07/backblaze-b2-backup-setup/
+
+# Backblaze B2 configuration variables
+B2_ACCOUNT="d76203d536b6"
+B2_KEY="0016d2d1f9d78655e6703922e9489249f5daeece51"
+B2_BUCKET="atmoz-private"
+B2_DIR="backup/thinkpad"
+
+# Dirs
+#LOCAL_DIR="/"
+REMOTE_DIR="b2://${B2_ACCOUNT}:${B2_KEY}@${B2_BUCKET}/${B2_DIR}"
+
+# GPG key (last 8 characters)
+ENC_KEY_YUBIKEY="77C9A76062E1797F" # yubikey
+ENC_KEY_LAPTOP="769670B306A048BB" # laptop
+SGN_KEY="769670B306A048BB" # laptop backup only
+GPG_ARGS="--use-agent \
+--encrypt-key $ENC_KEY_YUBIKEY \
+--sign-key $SGN_KEY"
+#--encrypt-key $ENC_KEY_LAPTOP \
+
+# Dirs to ignore
+#echo "### Directories that will be ignored:"
+#find / -name .no-backup -type f
+
+duplicity $GPG_ARGS verify $REMOTE_DIR/home /home
+
