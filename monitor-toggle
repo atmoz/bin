@@ -1,8 +1,11 @@
 #!/bin/bash
 
 internalMonitor="eDP1"
-externalMonitor="HDMI1" # "DP1"
 externalPosition="above"
+
+function externalMonitor() {
+    xrandr | grep " connected" | sed -Ee "s/^(\w+) connected .*/\1/gm" -e '2!d'
+}
 
 function monitorIsEnabled() {
     [[ -n "$(xrandr | grep "$1" | grep "+")" ]]
@@ -102,6 +105,7 @@ function hotplugMonitors() {
 }
 
 profile=${1:-"one"}
+externalMonitor="$(externalMonitor)" # "HDMI1" or "DP1" or "DP2"
 
 if [ "$profile" == "hotplug" ]; then
     while true; do
