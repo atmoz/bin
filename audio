@@ -1,10 +1,12 @@
 #!/bin/bash
 set -eu
 
+delta=5
+
 source ~/bin/notify_replace
 
 function notify() {
-    notify_replace -u low "$@"
+    notify_replace -t 1500 -u low "$@"
 }
 
 case "${1:-}" in
@@ -13,16 +15,20 @@ case "${1:-}" in
         if [ "$(pamixer --get-mute)" == "true" ]; then
             notify -i "audio-volume-muted" "Muted"
         else
-            notify -i "audio-volume-medium" "Unmuted" "$(pamixer --get-volume)"
+            notify -i "audio-volume-medium" "Unmuted" "$(pamixer --get-volume) %"
         fi
         ;;
     raise)
-        pamixer --unmute --increase 5
-        notify -i "audio-volume-medium" "$(pamixer --get-volume)"
+        pamixer --unmute --increase $delta
+        notify -i "audio-volume-medium" "$(pamixer --get-volume) %"
         ;;
     lower)
-        pamixer --unmute --decrease 5
-        notify -i "audio-volume-medium" "$(pamixer --get-volume)"
+        if [ "$(pamixer --get-mute)" == "true" ]; then
+            pamixer --unmute --set-volume 0
+        else
+            pamixer --unmute --decrease $delta
+        fi
+        notify -i "audio-volume-medium" "$(pamixer --get-volume) %"
         ;;
     next)
         dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify \
@@ -31,6 +37,13 @@ case "${1:-}" in
     prev)
         dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify \
             /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous
+        ;;
+    select-sink) # cleaner output (for use with dmenu)
+#        sink=$(pamixer --list-sinks | sed -e '1d' -e 's/"//g' | cut -d' ' -f3- | dmenu "${@:1}")
+        sinkString=$(pamixer --list-sinks | sed -e '1d' | dmenu "${@:2}")
+        sinkNumber="$(echo "$sinkString" | cut -d' ' -f1)"
+        echo $sinkNumber
+        pamixer --sink "$sinkNumber"
         ;;
 esac
 
