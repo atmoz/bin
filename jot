@@ -1,0 +1,28 @@
+#!/bin/bash
+# jot: to write or mark down quickly or briefly
+
+jotsDir=~/jots
+jotsFile="$jotsDir/$(date +"%Y/%m/%d").txt"
+
+jots() {
+    if [ -f "$jotsFile" ]; then
+        clear # nice when jotting a lot
+        echo "$jotsFile:"
+        cat "$jotsFile"
+    else
+        echo "No jots today!"
+    fi
+}
+
+jotDown() {
+    mkdir -p "$(dirname "$jotsFile")"
+    echo "[$(date +"%F %R")] $*" >> "$jotsFile"
+}
+
+if [ "$1" == "-e" ]; then
+    exec "$EDITOR" "$jotsFile"
+elif [ $# -gt 0 ]; then
+    jotDown "$@"
+fi
+
+jots
