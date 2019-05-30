@@ -3,7 +3,8 @@
 source ~/bin/notify_replace
 
 round() {
-    echo "($1+0.5)/1" | bc
+    #echo "($1+0.5)/1" | bc
+    echo ${1%.*}
 }
 
 getValue() {
