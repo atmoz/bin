@@ -75,12 +75,12 @@ function typeTab() {
 
 function clipboard() {
     string="$*"
-    oldClip="$(xclip "$xclipArgs" -o 2>/dev/null)"
-    echo -n "$string" | xclip "$xclipArgs"
+    oldClip="$(xclip $xclipArgs -o 2>/dev/null)"
+    echo -n "$string" | xclip $xclipArgs
     {
         sleep "$clipTime"
-        if [ "$(xclip "$xclipArgs" -o 2>/dev/null)" == "$string" ]; then
-            echo -n "$oldClip" | xclip "$xclipArgs"
+        if [ "$(xclip $xclipArgs -o 2>/dev/null)" == "$string" ]; then
+            echo -n "$oldClip" | xclip $xclipArgs
         fi
     } &
 }
