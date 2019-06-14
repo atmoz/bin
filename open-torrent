@@ -2,16 +2,13 @@
 # Because transmission is running in firejail, we need to move the torrent file
 # to /tmp. This script makes this easier.
 
-shopt -s nullglob
-select file in ~/.firejail-home/chromium/*/Downloads/*.torrent; do
-    if [ "$file" == "Quit" ] || [ ! -f "$file" ]; then
-        echo "No file selected, nothing is done."
-        exit 0
-    fi
+file="$(ls ~/.firejail-home/chromium/*/Downloads/*.torrent | dmenu)"
+if [ ! -f "$file" ]; then
+    echo "No file selected, nothing is done."
+    exit 0
+fi
 
-    tmpFile="/tmp/$(basename "$file")"
-    mv "$file" "$tmpFile"
-    ( transmission-gtk "$tmpFile" & )
-    break
-done
+tmpFile="/tmp/$(basename "$file")"
+mv "$file" "$tmpFile"
+( transmission-gtk "$tmpFile" 2>&1 > /dev/null & )
 
