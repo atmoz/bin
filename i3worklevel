@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sed -i -E 's/^(set \$worklevel ).*$/\1'$1'/' /home/atmoz/.config/i3/config \
+    && i3-msg reload
