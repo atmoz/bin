@@ -1,0 +1,22 @@
+#!/bin/bash
+set -ex
+
+[[ $UID != 0 ]] && exec sudo -E "$(readlink -f "$0")" "$@"
+
+path=/sys/devices/system/cpu/intel_pstate/no_turbo
+
+isOn() {
+    return $(cat $path)
+}
+
+on() {
+    echo 0 > $path
+    echo "Turbo on"
+}
+
+off() {
+    echo 1 > $path
+    echo "Turbo off"
+}
+
+if isOn; then off; else on; fi
