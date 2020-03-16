@@ -13,26 +13,26 @@ usage() {
 
 usage "jot id: generate new jot ID"
 jot_id() {
-    date +'%Y%m%d%H%M'
+    date +'%Y-%m-%d-%H%M'
 }
 
-usage "jot tag: generate new tag"
-usage "jot tag list [<search>]: list tags"
-jot_tag() {
+usage "jot ref: generate new ref"
+usage "jot ref list [<search>]: list refs"
+jot_ref() {
     if [[ "$1" =~ l|list ]]; then
         for f in [0-9-]*; do
-            # Extract tags from first line of all files (removing @)
-            for t in $(sed -n -E '/(^|[[:space:]])@([[:alnum:]-]+)/s/@//gp' $f); do
+            # Extract refs from first line of all files (removing @)
+            for t in $(sed -n -E '/(^|[[:space:]])@([#[:alnum:]_]+)/s/@//gp' $f); do
                 if [ -n "$2" ]; then
                     if [ "$2" == "--raw" ]; then
                         echo "$f:$t"
                     elif [ "$2" == "$t" ]; then
-                        echo "$f" # files that use this tag
+                        echo "$f" # files that use this ref
                     elif [ "$2" == "$f" ]; then
-                        echo "$t" # tags used in this file
+                        echo "$t" # refs used in this file
                     fi
                 else
-                    echo "$t" # all tags
+                    echo "$t" # all refs
                 fi
             done
         done | sort -u
@@ -43,9 +43,9 @@ jot_tag() {
 
 usage "jot ctags: generate ctags index file"
 jot_ctags() {
-    for pair in $(jot_tag list --raw); do
+    for pair in $(jot_ref list --raw); do
         IFS=: read -r f t <<< $pair
-        echo -e "$t\t$f\t/@$t/;\"\ttag"
+        echo -e "$t\t$f\t/@$t/;\"\tref"
     done > "$jotsPath/tags"
 }
 
@@ -62,7 +62,7 @@ case "$1" in
     p|path)   echo "$jotsPath" ;;
     l|lf)     lf ;;
     i|id)     jot_id ;;
-    t|tag)    shift; jot_tag "$@" ;;
+    r|ref)    shift; jot_ref "$@" ;;
     c|ctags)  jot_ctags ;;
     o|open)   exec vim [0-9]* ;;
     n|new|'') exec vim "$(jot_id)" ;;
