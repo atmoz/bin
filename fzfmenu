@@ -1,0 +1,21 @@
+type="${1:-desktop}"
+class="fzfmenu_$type"
+fzf_args='--margin=1,2 --cycle --no-info --prompt="Run: " --color="gutter:-1" --header='
+
+case "$type" in
+    "desktop")
+        command="i3-dmenu-desktop --dmenu='fzf $fzf_args'"
+        ;;
+
+    "path")
+        command="dmenu_path | fzf $fzf_args | ( nohup sh & )"
+        ;;
+
+    "custom")
+        command="${@:2} | fzf $fzf_args | sh"
+        ;;
+esac
+
+xdotool search --onlyvisible --class $class windowunmap \
+    || xdotool search --class $class windowmap \
+    || kitty --class $class bash -c "$command"
