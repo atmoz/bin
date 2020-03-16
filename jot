@@ -1,28 +1,71 @@
 #!/bin/bash
 # jot: to write or mark down quickly or briefly
 
-jotsDir=~/jots
-jotsFile="$jotsDir/$(date +"%Y/%m/%d").txt"
+jotsPath=~/jots
 
-jots() {
-    if [ -f "$jotsFile" ]; then
-        clear # nice when jotting a lot
-        echo "$jotsFile:"
-        cat "$jotsFile"
+usage() {
+    if [ "$#" -gt 0 ]; then
+        usage="$usage$*\n"
     else
-        echo "No jots today!"
+        echo -e "$usage" | column -t -s:
     fi
 }
 
-jotDown() {
-    mkdir -p "$(dirname "$jotsFile")"
-    echo "[$(date +"%F %R")] $*" >> "$jotsFile"
+usage "jot id: generate new jot ID"
+jot_id() {
+    date +'%Y%m%d%H%M'
 }
 
-if [ "$1" == "-e" ]; then
-    exec "$EDITOR" "$jotsFile"
-elif [ $# -gt 0 ]; then
-    jotDown "$@"
-fi
+usage "jot tag: generate new tag"
+usage "jot tag list [<search>]: list tags"
+jot_tag() {
+    if [[ "$1" =~ l|list ]]; then
+        for f in [0-9-]*; do
+            # Extract tags from first line of all files (removing @)
+            for t in $(sed -n -E '/(^|[[:space:]])@([[:alnum:]-]+)/s/@//gp' $f); do
+                if [ -n "$2" ]; then
+                    if [ "$2" == "--raw" ]; then
+                        echo "$f:$t"
+                    elif [ "$2" == "$t" ]; then
+                        echo "$f" # files that use this tag
+                    elif [ "$2" == "$f" ]; then
+                        echo "$t" # tags used in this file
+                    fi
+                else
+                    echo "$t" # all tags
+                fi
+            done
+        done | sort -u
+    else
+        printf '@%x\n' "$(date +'%s')"
+    fi
+}
 
-jots
+usage "jot ctags: generate ctags index file"
+jot_ctags() {
+    for pair in $(jot_tag list --raw); do
+        IFS=: read -r f t <<< $pair
+        echo -e "$t\t$f\t/@$t/;\"\ttag"
+    done > "$jotsPath/tags"
+}
+
+# Other commands
+usage "jot lf: browse jots in lf"
+usage "jot open: open all jots in vim"
+usage "jot path: print location of jots"
+usage "jot [new]: create new jot"
+
+# Enables us to use relative paths
+cd "$jotsPath" || exit 1
+
+case "$1" in
+    p|path)   echo "$jotsPath" ;;
+    l|lf)     lf ;;
+    i|id)     jot_id ;;
+    t|tag)    shift; jot_tag "$@" ;;
+    c|ctags)  jot_ctags ;;
+    o|open)   exec vim [0-9]* ;;
+    n|new|'') exec vim "$(jot_id)" ;;
+    *)        usage ;;
+esac
+
