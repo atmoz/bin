@@ -1,0 +1,26 @@
+#!/bin/bash
+# Using grep to get all lines including filename and line numbers
+# FZF preview files with colored query words (sed prefixes each with -e)
+# A sorted and unique list of selected filenames are printed
+
+preview() {
+    if [ "$#" -eq 0 ]; then
+        return # do nothing
+    fi
+
+    file=$1
+    grep_patterns="$(sed -E 's/(\S+)/-e \1/g' <<< "${@:2}")"
+
+    head -$LINES $file \
+        | grep --color=always -i -e "^" $grep_patterns
+}
+
+export -f preview
+
+paths="${@:-*}"
+grep --line-buffered --color=never -Hnr "" $paths \
+    | fzf -d: -e -m -n3.. \
+        --preview 'preview {1} {q}' \
+        --preview-window=noborder \
+        --layout=reverse \
+    | cut -d: -f1 | sort | uniq
